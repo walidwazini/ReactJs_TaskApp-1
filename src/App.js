@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 
 import { makeStyles } from '@mui/styles'
 import NewTask from './Components/NewTask'
@@ -9,18 +9,18 @@ const App = () => {
   const firebaseUrl = 'https://react-http-7483e-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json'
   const [tasks, setTasks] = useState([])
 
-  const transformTasks = taskObj => {
-    const loadedTasks = []
-    for (const taskKey in taskObj) {
-      loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text })
+  const { isLoading, error, sendRequest: fetchTasks } = useHttp()
+
+  useEffect(() => {
+    const transformTasks = taskObj => {
+      const loadedTasks = []
+      for (const taskKey in taskObj) {
+        loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text })
+      }
+      setTasks(loadedTasks)
     }
-    setTasks(loadedTasks)
-  }
-
-  const { isLoading, error, sendRequest: fetchTasks } =
-    useHttp({ url: firebaseUrl }, transformTasks)
-
-  useEffect(() => fetchTasks(), [])
+    fetchTasks({ url: firebaseUrl }, transformTasks)
+  }, [fetchTasks])
 
   const taskAddHandler = (task) => {
     setTasks((prevTasks) => prevTasks.concat(task));
