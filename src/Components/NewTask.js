@@ -1,39 +1,33 @@
-import React, { useState, useRef } from 'react'
+import React, { useRef } from 'react'
 
 import { makeStyles } from '@mui/styles'
 import { Box, Button, } from '@mui/material'
+import useHttp from '../Hooks/use-http'
 
 const NewTask = (props) => {
   const firebaseUrl = 'https://react-http-7483e-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json'
+  const { isLoading, error, sendRequest: sendTaskRequest } = useHttp()
+
   const taskInputRef = useRef();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const enterTaskHandler = async (taskText) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await fetch(firebaseUrl, {
+    const createTask = (taskData) => {
+      const generatedId = taskData.name; // firebase-specific => "name" contains generated id
+      const createdTask = { id: generatedId, text: taskText };
+      props.onAddTask(createdTask);
+    }
+
+    sendTaskRequest(
+      {
+        url: firebaseUrl,
         method: 'POST',
-        body: JSON.stringify({ text: taskText }),
         headers: {
           'Content-Type': 'application/json',
         },
-      })
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
-      const data = await response.json();
-
-      const generatedId = data.name; // firebase-specific => "name" contains generated id
-      const createdTask = { id: generatedId, text: taskText };
-
-      props.onAddTask(createdTask);
-
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
+        body: { text: taskText }
+      },
+      createTask
+    )
   }
 
   const submitHandler = (ev) => {
